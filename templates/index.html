@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Crop Yield Prediction</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(to right, #d3cce3, #e9e4f0);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .prediction-card {
+            background-color: #ffffffdd;
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 0 30px rgba(0,0,0,0.2);
+            width: 600px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        h1, h2 {
+            text-align: center;
+            color: #5a3e9b;
+            margin-bottom: 30px;
+        }
+
+        .form-row {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .form-group {
+            flex: 1;
+            min-width: 250px;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 10px 12px;
+            margin-top: 5px;
+            margin-bottom: 20px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            font-size: 15px;
+            transition: 0.3s;
+        }
+
+        input:focus, select:focus {
+            border-color: #7e57c2;
+            outline: none;
+            box-shadow: 0 0 10px #b39ddb;
+        }
+
+        button {
+            width: 100%;
+            background-color: #7e57c2;
+            color: white;
+            padding: 12px;
+            font-size: 16px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #5e35b1;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            margin-top: 20px;
+            color: #555;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #7e57c2;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .result-card {
+            margin-top: 25px;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            font-size: 18px;
+            font-weight: bold;
+            color: #333;
+            background: #e1bee7;
+            box-shadow: 0 0 15px rgba(126, 87, 194, 0.5);
+        }
+
+        .result-value {
+            font-size: 28px;
+            margin-top: 10px;
+        }
+
+        small {
+            display: block;
+            font-size: 14px;
+            color: #555;
+        }
+    </style>
+</head>
+<body>
+    <div class="prediction-card">
+        <h1>Crop Yield Predictor 🌾</h1>
+
+        <form id="yieldForm" method="post" onsubmit="return validateForm();">
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="crop">Crop Type</label>
+                    <select id="crop" name="crop" required>
+                        <option value="" disabled selected>Select a crop</option>
+                        <option value="Rice">Rice</option>
+                        <option value="Wheat">Wheat</option>
+                        <option value="Maize">Maize</option>
+                        <option value="Soyabean">Soybean</option>
+                        <option value="Cotton(lint)">Cotton</option>
+                        <option value="Sugarcane">Sugarcane</option>
+                        <option value="Groundnut">Groundnut</option>
+                        <option value="Potato">Potato</option>
+                        <option value="Jowar">Jowar (Sorghum)</option>
+                        <option value="Bajra">Bajra (Pearl Millet)</option>
+                        <option value="Ragi">Ragi (Finger Millet)</option>
+                        <option value="Barley">Barley</option>
+                        <option value="Turmeric">Turmeric</option>
+                        <option value="Onion">Onion</option>
+                        <option value="Banana">Banana</option>
+                        <option value="Coconut">Coconut</option>
+                        <option value="Arecanut">Arecanut</option>
+                        <option value="Cashewnut">Cashewnut</option>
+                        <option value="Sunflower">Sunflower</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="year">Crop Year</label>
+                    <select id="year" name="year" required>
+                        <option value="" disabled selected>Select year</option>
+                        {% for year in range(1997, 2029) %}
+                            <option value="{{ year }}" {% if year == 2024 %}selected{% endif %}>{{ year }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="season">Season</label>
+                    <select id="season" name="season" required>
+                        <option value="" disabled selected>Select season</option>
+                        <option value="Kharif">Kharif (June-October)</option>
+                        <option value="Rabi">Rabi (October-April)</option>
+                        <option value="Zaid">Zaid (March-June)</option>
+                        <option value="Whole Year">Whole Year</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="state">State</label>
+                    <select id="state" name="state" required>
+                        <option value="" disabled selected>Select state</option>
+                        <option value="Andhra Pradesh">Andhra Pradesh</option>
+                        <option value="Arunachal Pradesh">Arunachal Pradesh</option>
+                        <option value="Assam">Assam</option>
+                        <option value="Bihar">Bihar</option>
+                        <option value="Chhattisgarh">Chhattisgarh</option>
+                        <option value="Goa">Goa</option>
+                        <option value="Gujarat">Gujarat</option>
+                        <option value="Haryana">Haryana</option>
+                        <option value="Himachal Pradesh">Himachal Pradesh</option>
+                        <option value="Jharkhand">Jharkhand</option>
+                        <option value="Karnataka">Karnataka</option>
+                        <option value="Kerala">Kerala</option>
+                        <option value="Madhya Pradesh">Madhya Pradesh</option>
+                        <option value="Maharashtra">Maharashtra</option>
+                        <option value="Manipur">Manipur</option>
+                        <option value="Meghalaya">Meghalaya</option>
+                        <option value="Mizoram">Mizoram</option>
+                        <option value="Nagaland">Nagaland</option>
+                        <option value="Odisha">Odisha</option>
+                        <option value="Punjab">Punjab</option>
+                        <option value="Rajasthan">Rajasthan</option>
+                        <option value="Sikkim">Sikkim</option>
+                        <option value="Tamil Nadu">Tamil Nadu</option>
+                        <option value="Telangana">Telangana</option>
+                        <option value="Tripura">Tripura</option>
+                        <option value="Uttar Pradesh">Uttar Pradesh</option>
+                        <option value="Uttarakhand">Uttarakhand</option>
+                        <option value="West Bengal">West Bengal</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="area">Cultivation Area (hectares)</label>
+                    <input type="number" id="area" name="area" min="0.01" step="0.01" placeholder="e.g., 2.5" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="rainfall">Expected Annual Rainfall (mm)</label>
+                    <input type="number" id="rainfall" name="rainfall" min="0" step="1" placeholder="e.g., 1200" required>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="production">Expected Production (tonnes)</label>
+                    <input type="number" id="production" name="production" min="0.01" step="0.01" placeholder="e.g., 10.5" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="fertilizer">Fertilizer Usage (kg/hectare)</label>
+                    <input type="number" id="fertilizer" name="fertilizer" min="0" step="0.1" placeholder="e.g., 150" required>
+                </div>
+            </div>
+
+            <button type="submit">Predict Yield</button>
+        </form>
+
+        {% if prediction %}
+        <div class="result-card">
+            <h2>Prediction Result</h2>
+            <div class="result-value">
+                {{ prediction }} <small>tonnes/hectare</small>
+            </div>
+            <p>Based on the input parameters, the expected yield is shown above.</p>
+        </div>
+        {% endif %}
+    </div>
+
+    <script>
+        function validateForm() {
+            const year = document.getElementById("year").value;
+            if (year < 1997 || year > 2028) {
+                alert("Please select a valid year.");
+                return false;
+            }
+            return true;
+        }
+    </script>
+</body>
+</html>
